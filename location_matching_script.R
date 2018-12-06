@@ -25,10 +25,12 @@ short.data <- full.data %>% dplyr::filter(citation_full != "IDENTIFY", !is.na(La
 short.data.sp <- SpatialPoints(short.data[-c(1:4)])
 
 # Find records with coordinates closest to the values that need to be identified
-short.data.sp$nearest_in_set2 <- apply(gDistance(identify.sp, short.data.sp, byid=TRUE), 1, which.min)
-short.data.sp <- as.data.frame(short.data.sp) %>% unique()
-short.data.sp$matched_to <- identify$Site[short.data.sp$nearest_in_set2]
-short.data.sp <- merge(short.data.sp, short.data) %>% dplyr::select(-nearest_in_set2) %>% 
-      dplyr::select(matched_to, everything())
+identify.sp$nearest_in_set2 <- apply(gDistance(short.data.sp, identify.sp, byid=TRUE), 1, which.min)
+identify.df <- as.data.frame(identify.sp) %>% unique()
+identify.df$matched_to <- short.data$citation_full[identify.df$nearest_in_set2]
+identify.df$matched_site <- short.data$Site[identify.df$nearest_in_set2]
+data.merged <- merge(identify.df, identify) %>% 
+      dplyr::select(-c(nearest_in_set2, citation_full)) %>% 
+      dplyr::select(country, County, Site, Latitude, Longitude, matched_to, matched_site)
 
-write.csv(short.data.sp, "matched_locations.csv")
+write.csv(data.merged, "matched_locations.csv")
